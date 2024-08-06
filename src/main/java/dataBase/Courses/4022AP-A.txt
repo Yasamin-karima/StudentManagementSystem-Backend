@@ -1,0 +1,7 @@
+id:4022AP-A
+name:AdvancedProgramming
+unit:3
+teacher:S.Aliakbari
+examDate:2025-01-24
+times:[سه‌شنبه-۱۳:۰۰-۱۴:۳۰, ‌شنبه-۱۰:۳۰-۱۲:۰۰]
+ASS:تمرین‌دوم?4022AP-A?این‌تمرین‌را‌کامل‌کنید.?2024-07-26

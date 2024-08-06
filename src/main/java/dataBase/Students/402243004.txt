@@ -1,0 +1,14 @@
+id:402243004
+password:8520
+name:اشرف اشرفی
+COURSE:4022-Z
+COURSE:4022-SE-A
+TODO:باشگاه?false
+TODO:بیرون?false
+TODO:ناهار?false
+TODO:تمرین مدار?false
+TODO:صحبت با استاد?true
+TODO:پروژه?false
+TODO:خرید?true
+COURSE:4022-A
+ASS:HW-3?4022-Z?18.6

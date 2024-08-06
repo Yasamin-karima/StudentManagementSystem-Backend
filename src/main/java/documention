@@ -1,0 +1,8 @@
+-> for "term" & "course" , availability will be set to true
+    just in initializing in constructor.
+    setting it to false should be handled manually.
+
+-> for "assignment", availability is set to true when
+    adding an assignment by teacher,
+    but i dont know when to unavailable it exactly,
+    maybe after deadline???
