@@ -1,5 +1,7 @@
 package UserController;
 
+import dataBase.SQLConnect;
+
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -106,4 +108,10 @@ public class Login {
             return false;
         }
     }
+    private static boolean hasSignedUpTeacher(String name) {// works for both teacher and student
+        SQLConnect sql = SQLConnect.getInstance();
+        var names = sql.query("SELECT name FROM teachers;");
+        return names.contains(name);
+    }
+
 }
