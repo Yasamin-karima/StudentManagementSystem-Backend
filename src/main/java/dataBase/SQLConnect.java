@@ -53,21 +53,31 @@ public class SQLConnect {
         return result;
     }
 
-    public static void main(String[] args) {
-//        System.out.println(query("SELECT * FROM courses;"));
-    }
-    public String insert (String statement){
-        return null;
-        /*try (var conn = DriverManager.getConnection(url);
-             var stmt = conn.prepareStatement(statement)) {
-
+    public void insert (String sql){
+        try {
+            create.execute(sql);
         } catch (SQLException e) {
-            System.err.println(e.getMessage());
-            e.printStackTrace();
-        }*/
+            System.err.println("error in query method");
+            throw new RuntimeException(e);
+        }
     }
-    public String delete (String statement){
-        return null;
+
+    public void delete (String sql){
+        try {
+            create.execute(sql);
+        } catch (SQLException e) {
+            System.err.println("error in query method");
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void update (String sql){
+        try {
+            create.execute(sql);
+        } catch (SQLException e) {
+            System.err.println("error in query method");
+            throw new RuntimeException(e);
+        }
     }
 
 }

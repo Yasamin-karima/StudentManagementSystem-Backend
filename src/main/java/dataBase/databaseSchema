@@ -1,0 +1,55 @@
+CREATE TABLE teachers (
+name TEXT,
+password TEXT
+);
+
+CREATE TABLE assignments (
+course_id VARCHAR,
+ass_title VARCHAR,
+description TEXT,
+deadline VARCHAR
+);
+
+CREATE TABLE students (
+student_id VARCHAR,
+name VARCHAR,
+password VARCHAR
+);
+
+CREATE TABLE students_todos (
+student_id VARCHAR,
+todo_title VARCHAR,
+is_done VARCHAR
+);
+
+CREATE TABLE courses (
+course_id VARCHAR,
+course_name VARCHAR,
+teacher_name VARCHAR,
+unit INT,
+class_times VARCHAR,
+exam_date VARCHAR
+);
+
+CREATE TABLE teachers_courses (
+teacher_name VARCHAR,
+course_id VARCHAR
+);
+
+CREATE TABLE students_courses (
+student_id VARCHAR,
+course_id VARCHAR
+);
+
+CREATE TABLE assignments_scores (
+student_id VARCHAR,
+ass_title VARCHAR,
+course_id VARCHAR,
+score DECIMAL(5, 8)
+);
+
+CREATE TABLE courses_assignments (
+course_id VARCHAR,
+ass_title VARCHAR
+);
+

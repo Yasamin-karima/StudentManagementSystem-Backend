@@ -1,6 +1,11 @@
 package classes;
 
+import dataBase.SQLConnect;
+
 public class Todo {
+    private static final SQLConnect sql = SQLConnect.getInstance();
+
+
     String title;
     boolean isDone;
 
@@ -11,14 +16,11 @@ public class Todo {
         return isDone;
     }
 
-    public Todo(String title) {
-        this.title = title;
-        isDone = false;
-    }
     public Todo(String title, String done) {
         this.title = title;
         this.isDone = done.equals("true");
     }
+
 
     @Override
     public String toString() {

@@ -1,9 +1,0 @@
-id:4022-Z
-name:زبان
-unit:3
-teacher:M.Vahidi
-examDate:2025-01-23
-times:[سه‌شنبه-۱۳:۰۰-۱۴:۳۰, ‌شنبه-۱۰:۳۰-۱۲:۰۰]
-STUDENT:402243004
-ASS:HW_3?4022-Z?tests?2024-08-04
-ASS:HW-4?4022-Z?nothing?2024-08-15

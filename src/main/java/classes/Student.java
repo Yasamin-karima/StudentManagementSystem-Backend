@@ -1,23 +1,15 @@
 package classes;
 
-import dataBase.CRUD;
+import dataBase.SQLConnect;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.time.LocalDate;
-import java.util.*;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
+import java.util.stream.Collectors;
 
 
 public class Student  {
-    private static final File COURSE_DIR = new File("C:\\Users\\Yasamin\\OneDrive\\universe\\term2\\AP\\project\\project_repsitoryPattern\\src\\main\\java\\dataBase\\Courses");
-    private static final File STUDENT_DIR = new File("C:\\Users\\Yasamin\\OneDrive\\universe\\term2\\AP\\project\\project_repsitoryPattern\\src\\main\\java\\dataBase\\Students");
-
+    private static final SQLConnect sql = SQLConnect.getInstance();
 
     private String name;
     private String password;
@@ -25,12 +17,6 @@ public class Student  {
     private Date birth;
     private Double average;
     private int totalUnits;
-
-
-    private ArrayList<Course> courses = new ArrayList<>();
-    private ArrayList<Todo> todos = new ArrayList<>();
-//    private Map<Course, Integer> scores = new HashMap<>();
-    private Map<Assignment, Integer> scores = new HashMap<>();
 
 
     public Student(String name, String password, Long id) {
@@ -42,35 +28,23 @@ public class Student  {
         this.id = id;
     }
 
+
     public void setBirth(Date birth) {
         this.birth = birth;
     }
     public void setAverage() {
-        /*double result = 0.0;
-        int counter = 0;
-
-        var temp = this.getDoneAssigns();
-        for (Assignment a : temp){
-            result += a.score;
-            counter++;
-        }
-        this.average = result / counter;*/
         List<Assignment> doneAssigns = this.getDoneAssigns();
         if (doneAssigns.isEmpty()) this.average = 0.0;
         else this.average = doneAssigns.stream()
                 .map(a -> a.score)
-                .reduce((b, c) -> b+c).get() / doneAssigns.size();
-        /*this.average = this.getDoneAssigns().stream()
-                .map(a -> a.score)
-                .reduce((b, c) -> b+c).get() / this.getDoneAssigns().size();*/
+                .reduce(Double::sum).get() / doneAssigns.size();
     }
     public void setTotalUnits() {
         this.totalUnits = this.getCourses().stream()
-                .map(a -> a.getUnit())
-                .reduce((a, b) -> a+b)
+                .map(Course::getUnit)
+                .reduce(Integer::sum)
                 .get();
     }
-
 
 
     public String getName() {
@@ -83,43 +57,32 @@ public class Student  {
     public Date getBirth() {
         return birth;
     }
-    public Map<Assignment, Integer> getScores() {
-        return scores;
-    }
 
 
-    //limit exceptions
+
     public void setScoreForAssign(String score, Assignment ass){
-        CRUD.createDataOnFile(STR."ASS:\{ass.getTitle()}?\{ass.getCourse().getId()}?\{score}", STR."\{STUDENT_DIR}\\\{id}.txt");
+        sql.insert("INSERT INTO assignments_scores"
+                + STR."VALUES ('\{this.id}', '\{ass.getTitle()}', '\{ass.getCourse().getId()}', '\{score}');");
     }
     public List<Assignment> getDoneAssigns() {
+
         List<Assignment> result = new ArrayList<>();
+        var all = getAllAssigns();
+        var done = sql.query(STR."SELECT * FROM assignments_scores WHERE student_id = '\{id}'");
 
-        var temp = this.getAllAssigns();
-
-        Map<String, Double> doneAssignsAndScores = new HashMap<>();
-
-        try {
-            Files.lines(Paths.get(STR."\{STUDENT_DIR}\\\{id}.txt"))
-                    .filter(a -> a.startsWith("ASS:"))
-                    .map(b -> b.substring(4).split("\\?"))
-                    .forEach(c -> doneAssignsAndScores.put(c[0], Double.valueOf(c[1])));
-        } catch (IOException e) {
-            System.out.println("ERROR in getDoneAssigns");
-        }
-
-        for (Assignment a : temp){
-            if (doneAssignsAndScores.containsKey(a.getTitle())) {
-                result.add(new Assignment(a.course, a.title, a.description, a.deadline, doneAssignsAndScores.get(a.title)));
-            }
+        for (Assignment ass : all){
+            done.stream().map(a -> a.split("@"))
+                    .filter(b -> ass.getCourse().getId().equals(b[2]) && ass.getTitle().equals(b[1])) //b:402243004@HW-3@4022-Z@18.6
+                    .forEach(c -> ass.setScore(Double.parseDouble(c[3])));
+            if (ass.score != 0.0) result.add(ass);
         }
         return result;
     }
     public List<Assignment> getUndoneAssigns() {
         List<Assignment> result = new ArrayList<>();
 
-        var all = this.getAllAssigns();
-        var done = this.getDoneAssigns().stream().map(a -> a.title).toList();
+        var all = getAllAssigns();
+        var done = getDoneAssigns().stream().map(a -> a.title).toList();
 
         for (Assignment a : all){
             if (!done.contains(a.title)) result.add(a);
@@ -127,43 +90,19 @@ public class Student  {
         return result;
     }
     private List<Assignment> getAllAssigns(){ //STR."ASS:\{title}?\{course.getId()}?\{description}";
-        try {
-            List<Assignment> result = new ArrayList<>();
-            List<String> coursesIds = this.getCourseIds();
-            for (String s : coursesIds){
-                Files.readAllLines(Paths.get(STR."\{COURSE_DIR}\\\{s}.txt")).stream()
-                        .filter(a -> a.startsWith("ASS:"))
-                        .map(b -> b.substring(4).split("\\?"))
-                        .map(c -> new Assignment(new Course(c[1]).getWholeCourse(), c[0], c[2], c[3]))
-                        .forEach(result::add);
-            }
-            return result;
-        } catch (IOException e){
-            System.out.println("ERROR in  getting course ids of the student");
-            return null;
+        var courseIds = sql.query(STR."SELECT course_id FROM students_courses WHERE student_id = '\{id}';");
+        List<String> result = new ArrayList<>();
+        for (String c : courseIds){
+            result.addAll(sql.query(STR."SELECT * FROM assignments WHERE course_id = '\{c}';"));
         }
-    }
-
-
-
-    public List<String> getCourseIds() {
-        try {
-            List<String> result = new ArrayList<>();
-            var temp = Files.readAllLines(Paths.get(STR."\{STUDENT_DIR}\\\{id}.txt"));
-            for (String t : temp){
-                if (t.startsWith("COURSE:")){
-                    result.add(t.split(":")[1]);
-                }
-            }
-            return result;
-        } catch (IOException e){
-            System.out.println("ERROR in  getting course ids of the student");
-            return null;
-        }
+        return result.stream().map(a -> a.split("@"))
+                .map(b -> new Assignment(new Course(b[0]), b[1], b[2], b[3]))
+                .collect(Collectors.toList());
     }
     public List<Course> getCourses() {
-          List<Course> result = new ArrayList<>();
-          for (String s : this.getCourseIds()){
+        List<Course> result = new ArrayList<>();
+        var courseIds = sql.query(STR."SELECT course_id FROM students_courses WHERE student_id = '\{id}';");
+          for (String s : courseIds){
               result.add(new Course(s).getWholeCourse());
           }
           return result;
@@ -171,42 +110,28 @@ public class Student  {
 
 
     public List<Todo> getTodos() {
-        try {
-            List<Todo> result = new ArrayList<>();
-            var temp = Files.readAllLines(Paths.get(STR."\{STUDENT_DIR}\\\{id}.txt"));
-            for (String t : temp){
-                if (t.startsWith("TODO:")){
-                    String[] split = t.substring(5).split("\\?");
-                    result.add(new Todo(split[0], split[1]));
-                }
-            }
-            return result;
-        } catch (IOException e){
-            System.out.println("ERROR in  getting course ids of the student");
-            return null;
+        List<Todo> result = new ArrayList<>();
+        var todos = sql.query(STR."SELECT todo_title, is_done FROM students_todos WHERE student_id = '\{id}';");
+        for (String t : todos){
+            var split = t.split("@");
+            result.add(new Todo(split[0], split[1]));
         }
+        return result;
     }
     public void createTodo(String title){
         if (this.doesTodoExists(title)) {
             System.out.println("todo exists");
-            return;
+        } else {
+            sql.insert(STR."INSERT INTO students_todos VALUES ('\{id}', '\{title}', 'false');");
         }
-        Todo newOne = new Todo(title, "false");
-        CRUD.createDataOnFile(newOne.toString(), STR."\{STUDENT_DIR}\\\{id}.txt");
-        System.out.println("todo created");
     }
-    public void setTodoDone(String title){
-        CRUD.deleteLine(STR."TODO:\{title}", Path.of(STR."\{STUDENT_DIR}\\\{id}.txt"));
-        Todo t = new Todo(title, "true");
-        CRUD.createDataOnFile(t.toString(), STR."\{STUDENT_DIR}\\\{id}.txt");
-    }
-    public void setTodoUndone(String title){
-        CRUD.deleteLine(STR."TODO:\{title}", Path.of(STR."\{STUDENT_DIR}\\\{id}.txt"));
-        Todo t = new Todo(title, "false");
-        CRUD.createDataOnFile(t.toString(), STR."\{STUDENT_DIR}\\\{id}.txt");
+    public void setTodoStatus(String title, String status){
+        sql.update("UPDATE students_todos" +
+                STR." SET is_done = '\{status}' " +
+                STR."WHERE student_id = '\{id}' AND todo_title = '\{title}';");
     }
     public void removeTodo(String title){
-        CRUD.deleteLine(STR."TODO:\{title}", Path.of(STR."\{STUDENT_DIR}\\\{id}.txt"));
+        sql.delete(STR."DELETE FROM students_todos WHERE todo_title = '\{title}' AND student_id = '\{this.id}';");
     }
     public boolean doesTodoExists(String title){
         return this.getTodos().stream()
@@ -216,28 +141,19 @@ public class Student  {
 
 
 
-
-
-    public String toStringStudent(){
-        return STR."id:\{id}\npassword:\{password}\nname:\{name}";
-    }
     public String toString(){
-        return STR."STUDENT:\{id}";
+        return STR."student_id : \{id}" +
+                STR."name : \{name}" +
+                STR."pass : \{password}";
     }
     public Student getWholeStudent() { //we have id, we want : name, average, birth, pass
-        List<String> lines = new ArrayList<>();
-        try {
-            lines = Files.readAllLines(Paths.get(STR."\{STUDENT_DIR}\\\{this.id}.txt"));
-        } catch (IOException e){
-            System.out.println("ERROR in reading student file");
-        }
-        for (String s : lines){
-            if (s.startsWith("name:")){
-                this.name = s.substring(5);
-            }
-            if (s.startsWith("password:")){
-                this.password = s.substring(9);
-            }
+        var student = sql.query("SELECT name, password FROM students " +
+                STR."WHERE student_id = '\{this.id}';");
+        this.name = student.get(0);
+        this.password = student.get(1);
+        this.setAverage();
+        this.setTotalUnits();
+        /*for (String s : lines){
             if (s.startsWith("birth:")){
                 try {
                     this.birth = DateFormat.getDateInstance().parse(s.substring(6));
@@ -245,26 +161,17 @@ public class Student  {
                     System.out.println("error in parsing date of birth");
                 }
             }  else this.birth = null;
-        }
-        this.setAverage();
-        this.setTotalUnits();
+        }*/
         return this;
     }
     public void changePass(String newPass) {
-        try {
-            Files.lines(Paths.get(STR."\{STUDENT_DIR}\\\{id}.txt"))
-                    .filter(a -> a.startsWith("password:"))
-                    .forEach(b -> CRUD.update(b.substring(9), newPass, STR."\{STUDENT_DIR}\\\{id}.txt"));
-        } catch (IOException e) {
-            System.out.println("ERROR in changing password");
-        }
+        sql.update("UPDATE students" +
+                STR."SET password = '\{newPass}' WHERE student_id = '\{id}';");
     }
-/*
-    public void deleteStudent() {
-        try {
-            Files.delete(Paths.get(STR."\{STUDENT_DIR}\\\{this.id}.txt"));
-        } catch (IOException e) {
-            System.out.println("couldn't delete student file");
-        }
-    }*/
+    public void deleteStudent(){
+        sql.delete(STR."DELETE FROM assignments_scores WHERE student_id = '\{this.id}';");
+        sql.delete(STR."DELETE FROM students_courses WHERE student_id = '\{this.id}';");
+        sql.delete(STR."DELETE FROM students_todos WHERE student_id = '\{this.id}';");
+        sql.delete(STR."DELETE FROM students WHERE student_id = '\{this.id}';");
+    }
 }

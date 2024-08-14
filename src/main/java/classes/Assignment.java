@@ -1,24 +1,19 @@
 package classes;
 
-import dataBase.CRUD;
+import dataBase.SQLConnect;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.sql.Time;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
-import static dataBase.CRUD.*;
 
 public class Assignment {
+    private static final SQLConnect sql = SQLConnect.getInstance();
+
+
     Course course;
     String title;
     String description;
     String deadline;
-    Time estimatedTime;
-    String studentDescription;
     double score;
 
 
@@ -36,16 +31,11 @@ public class Assignment {
         this.description = description;
         this.deadline = deadline;
     }
-    public Assignment(Course course, String title, String description, String deadline, double score) {
-        this.course = course;
-        this.title = title;
-        this.description = description;
-        this.deadline = deadline;
+
+
+    public void setScore(double score) {
         this.score = score;
     }
-
-
-
     public void setDescription(String description) {
         this.description = description;
     }
@@ -69,76 +59,30 @@ public class Assignment {
     }
 
 
-    /*public Assignment getWholeAssignment(){//we only have title in assignment
-        try (Stream<String> lines = Files.lines(Paths.get(STR."\{COURSE_DIR}\\\{this.id}.txt"))){
-
-            setNameAndUnit(
-                    lines.filter(a -> a.startsWith("name:")).collect(Collectors.joining()).substring(5),
-                    Integer.parseInt(Files.lines(Paths.get(STR."\{COURSE_DIR}\\\{this.id}.txt")).filter(a -> a.startsWith("unit:")).collect(Collectors.joining()).substring(5)));
-
-            setTeacher(new Teacher(
-                    Files.lines(Paths.get(STR."\{COURSE_DIR}\\\{this.id}.txt")).filter(a -> a.startsWith("teacher:")).collect(Collectors.joining()).substring(8)
-            ));
-            return this;
-        } catch (IOException e){
-            System.out.println("ERROR in getting Assignments for course");
-        }
-        return null;
-    }*/
-
-    public String toStringCourse(){
-        return STR."ASS:\{title}?\{course.getId()}?\{description}?\{deadline}";
-    }
     public String toString(){
         return STR."ASS:\{title}?\{course.getId()}?\{score}?\{description}";
     }
-    public String toStringALLOBJECTS(){
-        return STR."ASS:\{title}?\{course.getId()}";
-    }
 
-    /*public static void main(String[] args) throws IOException {
-        String s = STR."\{COURSE_DIR}\\4022AP-A.txt";
-        var temp = Files.readAllLines(Path.of(s)).get(4);
-        var tem = temp.substring(4);
-        var o = tem.split("\\?")[3];
-        LocalDate d = LocalDate.parse();
-        System.out.println(d);
-
-    }*/
     public static List<Assignment> getAllTheAssignmentsTitles(){
-        try {
-            var temp = Files.readAllLines(Paths.get(STR."\{ALL_OBJECTS}"));
-            List<Assignment> result = new ArrayList<>();
-            for (String s : temp){
-                if (s.startsWith("ASS:")){
-                    result.add(new Assignment(s.substring(4).split("\\?")[0]));
-                }
-            }
-            return result;
-        } catch (IOException e){
-            System.out.println("ERROR in  getting all assignments of ALL_OBJECT");
-            return null;
-        }
+        return sql.query("SELECT ass_title FROM assignments;").stream()
+                .map(Assignment::new)
+                .collect(Collectors.toList());
     }
-
     public void removeAssignment(){
         if (this.getCourse() == null){
             System.out.println("we don't know the course of the assignment, so we can't delete it");
         } else {
-            CRUD.deleteLine(STR."ASS:\{this.getTitle()}?\{this.getCourse().getId()}", ALL_OBJECTS.toPath());// delete from ALL_OBJECT
-            CRUD.deleteLine(
-                    STR."ASS:\{this.getTitle()}?\{this.getCourse().getId()}",
-                    Paths.get(STR."\{COURSE_DIR}\\\{this.getCourse().getId()}.txt"));// delete from COURSE file
-            try { // delete from student files
-                Files.lines(Paths.get(STR."\{COURSE_DIR}\\\{this.getCourse().getId()}.txt"))
-                        .filter(b -> b.startsWith("STUDENT:"))
-                        .map(c -> c.substring(8))
-                        .forEach(d -> CRUD.deleteLine(
-                                STR."ASS:\{this.getTitle()}?\{this.getCourse().getId()}",
-                                Paths.get(STR."\{STUDENT_DIR}\\\{d}.txt")));
-            } catch (IOException e) {
-                System.out.println("exception in deleting assignment from student files");
+            String[] tables = new String[] {"assignments", "assignments_scores", "courses_assignments"};
+            for (String table : tables){
+                sql.delete(STR."DELETE FROM \{table} " +
+                        STR."WHERE ass_title = '\{this.title}' AND course_id = '\{this.getCourse().getId()}';");
             }
+            /*sql.delete("DELETE FROM assignments " +
+                    STR."WHERE ass_title = '\{this.title}' AND course_id = '\{this.getCourse().getId()}';");// delete from assignments table
+            sql.delete("DELETE FROM assignments_scores " +
+                    STR."WHERE ass_title = '\{this.title}' AND course_id = '\{this.getCourse().getId()}';");// delete from scores table
+            sql.delete("DELETE FROM courses_assignments " +
+                    STR."WHERE ass_title = '\{this.title}' AND course_id = '\{this.getCourse().getId()}';");// delete from courses_assignments table*/
         }
     }
 

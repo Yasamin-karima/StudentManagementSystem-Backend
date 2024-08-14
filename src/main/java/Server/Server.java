@@ -1,13 +1,9 @@
 package Server;
 
 import ObjectsController.Course.CourseUtils;
-import ObjectsController.ToDo.TodoUtils;
 import UserController.Login;
-import UserController.Logout;
 import UserController.SignUp;
-import classes.Assignment;
-import classes.Course;
-import classes.Student;
+import classes.*;
 import com.google.gson.Gson;
 
 import java.io.*;
@@ -16,7 +12,6 @@ import java.net.Socket;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class Server {
     public static void main(String[] args) throws IOException {
@@ -111,19 +106,23 @@ class ClientHandler extends Thread {
                         new Gson().toJson(res);
                 break;
             case "createTodo" ://createTodo*402243090*title
-                TodoUtils.createTodo(Long.valueOf(split[1]), split[2]);
+                new Student(Long.valueOf(split[1])).createTodo(split[2]);
+//                TodoUtils.createTodo(Long.valueOf(split[1]), split[2]);
                 response = "201";
                 break;
             case "removeTodo" ://removeTodo*402243090*title
-                TodoUtils.removeTodo(Long.valueOf(split[1]), split[2]);
+                new Student(Long.valueOf(split[1])).removeTodo(split[2]);
+//                TodoUtils.removeTodo(Long.valueOf(split[1]), split[2]);
                 response = "201";
                 break;
             case "setTodoState" ://setTodoState*402243090*title*newState
-                if (split[3].equals("true"))  {
+                new Student(Long.valueOf(split[1])).setTodoStatus(split[2], split[3]);
+                response = "201";
+                /*if (split[3].equals("true"))  {
                     response = TodoUtils.todoDone(Long.valueOf(split[1]), split[2]);
                 } else {
                     response = TodoUtils.todoUndone(Long.valueOf(split[1]), split[2]);
-                }
+                }*/
                 break;
             case "getDoneAssigns" ://getDoneAssigns*402243090*sortFormat
                 List<Assignment> r = new ArrayList<>();
@@ -156,7 +155,7 @@ class ClientHandler extends Thread {
                 response = "201";
                 break;
             case "deleteAccount" :// changePassword*userId*newPass;
-                Logout.logout(new Student(Long.valueOf(split[1])));
+                new Student(Long.valueOf(split[1])).deleteStudent();
                 response = "201";
                 break;
             default:

@@ -1,6 +1,0 @@
-id:4021-ITP-A
-name:مبانی‌برنامه‌نویسی
-unit:3
-teacher:S.Aliakbari
-examDate:2025-01-21
-times:[سه‌شنبه-۱۳:۰۰-۱۴:۳۰, ‌شنبه-۱۰:۳۰-۱۲:۰۰]

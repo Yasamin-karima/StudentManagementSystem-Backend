@@ -1,9 +1,9 @@
-import ObjectsController.Assignment.AssignUtils;
 import ObjectsController.Course.CourseUtils;
 import UserController.Login;
 import UserController.SignUp;
 import classes.Assignment;
 import classes.Course;
+import classes.Student;
 import classes.Teacher;
 import com.github.eloyzone.jalalicalendar.DateConverter;
 
@@ -75,7 +75,9 @@ public class cli {
         var split = command.split(":");
         switch (split[0]){
             case "SETSCORE":
-                AssignUtils.setScoreAssignmentStudent(split[1], new Assignment(checkingCourse, split[2]), split[3]);
+                new Student(Long.valueOf(split[3]))
+                        .setScoreForAssign(split[1], new Assignment(checkingCourse, split[2]));
+//                AssignUtils.setScoreAssignmentStudent(split[1], new Assignment(checkingCourse, split[2]), split[3]);
                 break;
             case "REMOVEASSIGNMENT":
                 new Assignment(checkingCourse, split[1]).removeAssignment();
@@ -123,7 +125,8 @@ public class cli {
         DateConverter converter = new DateConverter();
         LocalDate date = converter.jalaliToGregorian(Integer.parseInt(split[0]), Integer.parseInt(split[1]), Integer.parseInt(split[2]));
 
-        AssignUtils.createAssignForCourse(title, checkingCourse, description, String.valueOf(date));
+        checkingCourse.createAssignment(title, description, String.valueOf(date));
+//        AssignUtils.createAssignForCourse(title, checkingCourse, description, String.valueOf(date));
         State = 9;
     }
 

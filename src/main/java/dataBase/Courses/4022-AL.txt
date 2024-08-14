@@ -1,6 +1,0 @@
-id:4022-AL
-name:الگوریتم
-unit:4
-teacher:R.Ghavami
-examDate:2025-01-22
-times:[سه‌شنبه-۱۳:۰۰-۱۴:۳۰, ‌شنبه-۱۰:۳۰-۱۲:۰۰]

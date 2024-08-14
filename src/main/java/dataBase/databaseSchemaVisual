@@ -1,0 +1,64 @@
+
+teachers
+---------------------
+name        TEXT
+password    TEXT
+---------------------
+
+
+assignments
+---------------------
+course_id      VARCHAR
+ass_title      VARCHAR
+description    Text
+deadline       VARCHAR
+---------------------
+
+
+students
+---------------------
+student_id    VARCHAR
+name          VARCHAR
+password      VARCHAR
+---------------------
+
+
+courses
+---------------------
+course_id      VARCHAR
+course_name    VARCHAR
+teacher_name   VARCHAR
+unit           INT
+class_times    VARCHAR
+exam_date      VARCHAR
+---------------------
+
+teachers_courses
+---------------------
+teacher_name   VARCHAR
+course_id      VARCHAR
+---------------------
+
+
+students_courses
+---------------------
+student_id    VARCHAR
+course_id     VARCHAR
+---------------------
+
+
+assignments_scores
+---------------------
+student_id    VARCHAR
+ass_title     VARCHAR
+course_id     VARCHAR
+score         DECIMAL(5, 8)
+---------------------
+
+
+
+students_courses
+---------------------
+course_id     VARCHAR
+ass_title     VARCHAR
+---------------------

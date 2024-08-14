@@ -1,25 +1,13 @@
 package classes;
 
-import dataBase.CRUD;
+import dataBase.SQLConnect;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import static dataBase.CRUD.*;
-import static dataBase.CRUD.STUDENT_DIR;
+import java.util.ArrayList;
 
 public class Course {
-    private static final File COURSE_DIR = new File("C:\\Users\\Yasamin\\OneDrive\\universe\\term2\\AP\\project\\project_repsitoryPattern\\src\\main\\java\\dataBase\\Courses");
+    final private static SQLConnect sql = SQLConnect.getInstance();
+
     private String name; //مدار الکتریکی
     private String id; //4022EC
     private int unit; //3
@@ -40,8 +28,6 @@ public class Course {
     }
 
 
-
-
     public String getId() {
         return id;
     }
@@ -55,27 +41,23 @@ public class Course {
         return examDate.toString();
     }
 
-    public Course getWholeCourse() {//we only have id
-        List<String> linesss = new ArrayList<>();
-        try {
-            linesss = Files.readAllLines(Paths.get(STR."\{COURSE_DIR}\\\{this.id}.txt"));
-        } catch (IOException e) {
-            System.out.println("ERROR in getting Assignments for course");
-            return null;
-        }
-        for (String s : linesss) {
-            if (s.startsWith("name:")) setName(s.substring(5));
-            else if (s.startsWith("unit:")) setUnit(Integer.parseInt(s.substring(5)));
-            else if (s.startsWith("teacher:")) setTeacher(new Teacher(s.substring(8)));
-            else if (s.startsWith("examDate:")) setExamDate(s.substring(9));
-            else if (s.startsWith("times:")) setCourseTimes(List.of(s.substring(7, s.length() - 2).trim().split(",")));
-            else continue;
-        }
+    public Course getWholeCourse() {
+        //we only have id, we want name, unit, teacher, examDate, times
+        // (course_id ,course_name ,teacher_name ,unit ,class_times ,exam_date );
+
+        var course = sql.query("SELECT * FROM courses " +
+                STR."WHERE course_id = '\{this.id}';").getFirst().split("@");
+
+        setName(course[1]);
+        setTeacher(new Teacher(course[2]));
+        setUnit(Integer.parseInt(course[3]));
+        setCourseTimes(List.of(course[4].substring(1, course[4].length() - 1).trim().split(",")));
+        // setCourseTimes(List.of(s.substring(7, s.length() - 2).trim().split(",")));
+        setExamDate(course[5]);
+
         return this;
     }
-    public String toStringInCourses(){
-        return STR."id:\{id}\nname:\{name}\nunit:\{unit}\nteacher:\{teacher.getName()}\nexamDate:\{examDate}\ntimes:\{courseTimes}";
-    }
+
     public String toString(){
         return STR."COURSE:\{id}";
     }
@@ -84,11 +66,9 @@ public class Course {
     public void setName(String name) {
         this.name = name;
     }
-
     public void setUnit(int unit) {
         this.unit = unit;
     }
-
     public void setAssignments(Assignment assignment) {
         assignments.add(assignment);
     }
@@ -105,62 +85,57 @@ public class Course {
         this.examDate = examDate;
     }
 
+
     public List<String> getAssignmentTitles() {
-        try (Stream<String> lines = Files.lines(Paths.get(STR."\{COURSE_DIR}\\\{id}.txt"))){
-            return lines.filter(a -> a.startsWith("ASS:"))
-                    .map(b -> b.substring(4))
-                    .map(c -> c.split("\\?")[0])
-                    .toList();
-        } catch (IOException e){
-            System.out.println("ERROR in getting Assignments for course");
-        }
-        return null;
+        return sql.query("SELECT ass_title FROM courses_assignments" +
+                STR." WHERE course_id = '\{this.id}';");
     }
     public List<String> getStudentIds() {
-        try (Stream<String> lines = Files.lines(Paths.get(STR."\{COURSE_DIR}\\\{id}.txt"))){
-            return lines.filter(a -> a.startsWith("STUDENT:"))
-                    .map(b -> b.substring(8))
-                    .toList();
-        } catch (IOException e){
-            System.out.println("ERROR in getting Student Ids for course");
-        }
-        return null;
+        return sql.query("SELECT student_id FROM students_courses" +
+                STR." WHERE course_id = '\{this.id}';");
     }
     public String getCourseNameById(){
-        return CRUD.read(STR."\{COURSE_DIR}\\\{id}.txt").lines()
-                .filter(a -> a.startsWith("name:"))
-                .map(b -> b.substring(5))
-                .collect(Collectors.joining());
+        var list = sql.query("SELECT course_name FROM courses " +
+                STR."WHERE course_id = '\{this.id}';");
+
+        if (list.isEmpty()) return null;
+        else return list.getFirst();
     }
     public Integer getCourseUnitById(){
-        return Integer.valueOf(CRUD.read(STR."\{COURSE_DIR}\\\{id}.txt").lines()
-                .filter(a -> a.startsWith("unit:"))
-                .map(b -> b.substring(5))
-                .collect(Collectors.joining()));
+        var list = sql.query("SELECT unit FROM courses " +
+                STR."WHERE course_id = '\{this.id}';");
+
+        if (list.isEmpty()) return null;
+        else return Integer.valueOf(list.getFirst());
     }
     public String getTeacherName(){
-        return CRUD.read(STR."\{COURSE_DIR}\\\{id}.txt").lines()
-                .filter(a -> a.startsWith("teacher:"))
-                .map(b -> b.substring(8))
-                .collect(Collectors.joining());
+        var list = sql.query("SELECT teacher_name FROM courses " +
+                STR."WHERE course_id = '\{this.id}';");
+
+        if (list.isEmpty()) return null;
+        else return list.getFirst();
     }
 
-    public void removeCourse(){
-        CRUD.deleteLine(STR."COURSE:\{this.getId()}", ALL_OBJECTS.toPath()); // delete from ALL_OBJECT
-        CRUD.deleteLine(// delete from teacher file
-                STR."COURSE:\{this.getId()}",
-                Paths.get(STR."\{TEACHER_DIR}\\\{this.getTeacherName()}.txt"));
-        try { // delete from student files
-            Files.lines(Paths.get(STR."\{COURSE_DIR}\\\{this.getId()}.txt"))
-                    .filter(b -> b.startsWith("STUDENT:"))
-                    .map(c -> c.substring(8))
-                    .forEach(d -> CRUD.deleteLine(
-                            STR."COURSE:\{this.getId()}",
-                            Paths.get(STR."\{STUDENT_DIR}\\\{d}.txt")));
-            Files.delete(Paths.get(STR."\{COURSE_DIR}\\\{this.getId()}.txt"));
-        } catch (IOException e) {
-            System.out.println("exception in deleting course from student files or course file");
-        }
 
+    public void createAssignment(String title, String description, String deadline){
+        Assignment newAss = new Assignment(this, title);
+        newAss.setDescription(description);
+        newAss.setDeadline(deadline);
+
+        // inserting assignment into assignments table.
+        sql.insert(STR."INSERT INTO assignments VALUES ('\{this.getId()}', '\{newAss.getTitle()}', '\{newAss.getDescription()}', '\{newAss.getDeadline()}');");
+
+        // inserting assignment into  courses_assignments table.
+        sql.insert(STR."INSERT INTO courses_assignments VALUES ('\{this.getId()}', '\{newAss.getTitle()}');");
+    }
+    public void removeCourse(){
+        sql.delete(STR."DELETE FROM courses WHERE course_id = '\{id}';");
+        sql.delete(STR."DELETE FROM teachers_courses WHERE course_id = '\{id}';");
+        sql.delete(STR."DELETE FROM students_courses WHERE course_id = '\{id}';");
+
+        sql.delete("DELETE FROM assignments_scores " +
+                STR."WHERE course_id = '\{this.id}';");
+        sql.delete("DELETE FROM courses_assignments " +
+                STR."WHERE course_id = '\{this.id}';");
     }
 }
