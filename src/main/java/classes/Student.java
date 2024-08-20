@@ -3,6 +3,7 @@ package classes;
 import dataBase.SQLConnect;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -43,7 +44,7 @@ public class Student  {
         this.totalUnits = this.getCourses().stream()
                 .map(Course::getUnit)
                 .reduce(Integer::sum)
-                .get();
+                .orElse(0);
     }
 
 
@@ -96,7 +97,7 @@ public class Student  {
             result.addAll(sql.query(STR."SELECT * FROM assignments WHERE course_id = '\{c}';"));
         }
         return result.stream().map(a -> a.split("@"))
-                .map(b -> new Assignment(new Course(b[0]), b[1], b[2], b[3]))
+                .map(b -> new Assignment(new Course(b[0]).getWholeCourse(), b[1], b[2], b[3]))
                 .collect(Collectors.toList());
     }
     public List<Course> getCourses() {
@@ -148,9 +149,10 @@ public class Student  {
     }
     public Student getWholeStudent() { //we have id, we want : name, average, birth, pass
         var student = sql.query("SELECT name, password FROM students " +
-                STR."WHERE student_id = '\{this.id}';");
-        this.name = student.get(0);
-        this.password = student.get(1);
+                STR."WHERE student_id = '\{this.id}';").getFirst().split("@");
+        System.out.println(Arrays.toString(student));
+        this.name = student[0];
+        this.password = student[1];
         this.setAverage();
         this.setTotalUnits();
         /*for (String s : lines){
@@ -165,13 +167,31 @@ public class Student  {
         return this;
     }
     public void changePass(String newPass) {
-        sql.update("UPDATE students" +
-                STR."SET password = '\{newPass}' WHERE student_id = '\{id}';");
+        System.out.println("START>>>>");
+         System.out.println("END <<<<<");
     }
     public void deleteStudent(){
         sql.delete(STR."DELETE FROM assignments_scores WHERE student_id = '\{this.id}';");
         sql.delete(STR."DELETE FROM students_courses WHERE student_id = '\{this.id}';");
         sql.delete(STR."DELETE FROM students_todos WHERE student_id = '\{this.id}';");
         sql.delete(STR."DELETE FROM students WHERE student_id = '\{this.id}';");
+    }
+
+    // an issue is that assignments_scores table shouldn't be empty :|
+    public Assignment getBestAssign() {
+        var data = sql.query(STR."SELECT * FROM assignments_scores WHERE student_id = '\{this.id}' ORDER BY score DESC LIMIT(1);");
+        if (data.isEmpty()) return null;
+        else {
+            var temp = data.getFirst().split("@");
+            return new Assignment(new Course(temp[2]), temp[1]).getWholeAssignment();
+        }
+    }
+    public Assignment getWorstAssign() {
+        var data = sql.query(STR."SELECT * FROM assignments_scores WHERE student_id = '\{this.id}' ORDER BY score ASC LIMIT(1);");
+        if (data.isEmpty()) return null;
+        else {
+            var temp = data.getFirst().split("@");
+            return new Assignment(new Course(temp[2]), temp[1]).getWholeAssignment();
+        }
     }
 }

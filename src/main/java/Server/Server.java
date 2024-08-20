@@ -5,6 +5,7 @@ import UserController.Login;
 import UserController.SignUp;
 import classes.*;
 import com.google.gson.Gson;
+import dataBase.SQLConnect;
 
 import java.io.*;
 import java.net.ServerSocket;
@@ -29,6 +30,7 @@ class ClientHandler extends Thread {
     Socket socket;
     BufferedReader brd;
     PrintWriter pwr;
+    Gson gson = new Gson();
 
     public ClientHandler(Socket socket) throws IOException {
         System.out.println("great, you're in clientHandler constructor");
@@ -85,15 +87,14 @@ class ClientHandler extends Thread {
                         Login.StudentLogin(Long.valueOf(split[1]), split[2]);
                 break;
             case "getStudent"://getStudent*402243090
-                System.out.println("in the method");
                 response =
-                        new Gson().toJson(new Student(Long.valueOf(split[1])).getWholeStudent());
+                        gson.toJson(new Student(Long.valueOf(split[1])).getWholeStudent());
                 break;
             case "getCourse" ://getCourse*402243090
                 var result =
                         new Student(Long.valueOf(split[1])).getCourses();
                 response =
-                        new Gson().toJson(result);
+                        gson.toJson(result);
                 break;
             case "createCourse" ://createCourse*402243090*courseId
                 CourseUtils.addStudentToCourse(Long.valueOf(split[1]), new Course(split[2]));
@@ -103,26 +104,19 @@ class ClientHandler extends Thread {
                 var res =
                         new Student(Long.valueOf(split[1])).getTodos();
                 response =
-                        new Gson().toJson(res);
+                        gson.toJson(res);
                 break;
             case "createTodo" ://createTodo*402243090*title
                 new Student(Long.valueOf(split[1])).createTodo(split[2]);
-//                TodoUtils.createTodo(Long.valueOf(split[1]), split[2]);
                 response = "201";
                 break;
             case "removeTodo" ://removeTodo*402243090*title
                 new Student(Long.valueOf(split[1])).removeTodo(split[2]);
-//                TodoUtils.removeTodo(Long.valueOf(split[1]), split[2]);
                 response = "201";
                 break;
             case "setTodoState" ://setTodoState*402243090*title*newState
                 new Student(Long.valueOf(split[1])).setTodoStatus(split[2], split[3]);
                 response = "201";
-                /*if (split[3].equals("true"))  {
-                    response = TodoUtils.todoDone(Long.valueOf(split[1]), split[2]);
-                } else {
-                    response = TodoUtils.todoUndone(Long.valueOf(split[1]), split[2]);
-                }*/
                 break;
             case "getDoneAssigns" ://getDoneAssigns*402243090*sortFormat
                 List<Assignment> r = new ArrayList<>();
@@ -132,7 +126,7 @@ class ClientHandler extends Thread {
                 } else if (split[2].equals("FIFO")) {
                     r = new Student(Long.valueOf(split[1])).getDoneAssigns();
                 }
-                response = new Gson().toJson(r);
+                response = gson.toJson(r);
                 break;
             case "getUndoneAssigns" ://getUndoneAssigns*402243090*sortFormat
                 List<Assignment> re = new ArrayList<>();
@@ -144,11 +138,11 @@ class ClientHandler extends Thread {
                 } else if (split[2].equals("FIFO")) {
                     re = new Student(Long.valueOf(split[1])).getUndoneAssigns();
 
-                    var allAssignsTitles = Assignment.getAllTheAssignmentsTitles().stream().map(Assignment::getTitle).toList();
+                    var allAssignsTitles = SQLConnect.getInstance().query("SELECT ass_title FROM assignments;");
                     re.sort((a, b) -> Integer.compare(allAssignsTitles.indexOf(b.getTitle()), allAssignsTitles.indexOf(a.getTitle())));
 
                 }
-                response = new Gson().toJson(re);
+                response = gson.toJson(re);
                 break;
             case "changePassword" :// changePassword*userId*newPass;
                 new Student(Long.valueOf(split[1])).changePass(split[2]);
@@ -157,6 +151,14 @@ class ClientHandler extends Thread {
             case "deleteAccount" :// changePassword*userId*newPass;
                 new Student(Long.valueOf(split[1])).deleteStudent();
                 response = "201";
+                break;
+            case "getBestAssign" :// getBestAssign*userId
+                var ass = new Student(Long.valueOf(split[1])).getBestAssign();
+                response = gson.toJson(ass);
+                break;
+            case "getWorstAssign" :// getWorstAssign*userId
+                var assign = new Student(Long.valueOf(split[1])).getWorstAssign();
+                response = gson.toJson(assign);
                 break;
             default:
                 System.out.println("default");

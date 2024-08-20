@@ -57,17 +57,26 @@ public class Assignment {
     public String getDescription() {
         return description;
     }
+    public Assignment getWholeAssignment(){
+        if (this.title == null || this.course == null) return null;
+
+        var data = sql.query("SELECT * FROM assignments " +
+                STR."WHERE course_id = '\{this.course.getId()}' AND ass_title = '\{this.title}';")
+                .getFirst().split("@");
+        this.course = new Course(this.course.getId()).getWholeCourse();
+        this.deadline = data[3];
+        this.description = data[2];
+        var temp = sql.query("SELECT score FROM assignments_scores " +
+                STR."WHERE course_id = '\{this.course.getId()}' And ass_title = '\{this.title}';");
+        if (temp != null) this.score = Double.parseDouble(temp.getFirst());
+        return this;
+    }
 
 
     public String toString(){
         return STR."ASS:\{title}?\{course.getId()}?\{score}?\{description}";
     }
 
-    public static List<Assignment> getAllTheAssignmentsTitles(){
-        return sql.query("SELECT ass_title FROM assignments;").stream()
-                .map(Assignment::new)
-                .collect(Collectors.toList());
-    }
     public void removeAssignment(){
         if (this.getCourse() == null){
             System.out.println("we don't know the course of the assignment, so we can't delete it");

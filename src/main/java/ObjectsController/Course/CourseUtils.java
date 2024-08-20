@@ -26,7 +26,7 @@ public class CourseUtils {
             System.out.println("invalid studentID");
             return;
         }
-        if (!courseExists(course.getName())){
+        if (!courseExists(course.getId())){
             System.out.println("invalid courseId");
             return;
         }
@@ -35,7 +35,7 @@ public class CourseUtils {
             return;
         }
 
-        sql.insert(STR."INSERT INTO students_courses VALUES ('\{studentId}', '\{course.getName()}');");
+        sql.insert(STR."INSERT INTO students_courses VALUES ('\{studentId}', '\{course.getId()}');");
     }
     private static boolean teacherExists(String name) {
         return sql.query("SELECT name FROM teachers;").contains(name);

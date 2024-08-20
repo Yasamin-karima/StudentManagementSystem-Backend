@@ -44,7 +44,6 @@ public class Course {
     public Course getWholeCourse() {
         //we only have id, we want name, unit, teacher, examDate, times
         // (course_id ,course_name ,teacher_name ,unit ,class_times ,exam_date );
-
         var course = sql.query("SELECT * FROM courses " +
                 STR."WHERE course_id = '\{this.id}';").getFirst().split("@");
 

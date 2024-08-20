@@ -23,6 +23,15 @@ password      VARCHAR
 ---------------------
 
 
+students_todos
+---------------------
+student_id    VARCHAR
+todo_title    VARCHAR
+is_done       VARCHAR
+---------------------
+
+
+
 courses
 ---------------------
 course_id      VARCHAR
@@ -57,7 +66,7 @@ score         DECIMAL(5, 8)
 
 
 
-students_courses
+courses_assignments
 ---------------------
 course_id     VARCHAR
 ass_title     VARCHAR
