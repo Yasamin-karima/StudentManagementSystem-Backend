@@ -23,12 +23,10 @@ public class cli {
 
 
     public static void main(String[] args) {
-        State = 0;
+        State = 2;
 
         loop: while (State != 27) { // 27 : exit
             switch (State){
-                case 0:
-                    ChooseRulePage(); break;
                 case 1:
                     showAssAndStudents(); break;
                 case 2:
@@ -77,7 +75,6 @@ public class cli {
             case "SETSCORE":
                 new Student(Long.valueOf(split[3]))
                         .setScoreForAssign(split[1], new Assignment(checkingCourse, split[2]));
-//                AssignUtils.setScoreAssignmentStudent(split[1], new Assignment(checkingCourse, split[2]), split[3]);
                 break;
             case "REMOVEASSIGNMENT":
                 new Assignment(checkingCourse, split[1]).removeAssignment();
@@ -135,7 +132,7 @@ public class cli {
         System.out.println("These are your courses : ");
         System.out.println("-- To add another course, choose '0' ");
         System.out.println("-- To see your courses, type another digit ");
-        setCursorPosition(5, 0);
+        setCursorPosition(4, 0);
         int answer = scan.nextInt();
         if (answer == 0) createCourse();
         showExistingCourses();
@@ -241,14 +238,6 @@ public class cli {
         }  else if (res.equals("401")) System.out.println("result is 401, incorrect password");
     }
 
-    //check password in backend :|||
-    private static void adminLogin() {
-        clearScreen();
-        setCursorPosition(2, 20);
-        System.out.println("hello dear ADMIN :)");
-        setCursorPosition(3, 20);
-        System.out.println("enter admin's password :");
-    }
     private static void teacherWelcome() {
         clearScreen();
         setCursorPosition(2, 20);
@@ -267,26 +256,8 @@ public class cli {
                 State = 7; break;
         }
     }
-    private static void ChooseRulePage() {
-        clearScreen();
 
-        System.out.println("hello");
-        System.out.println("welcome to our app");
-        System.out.println();
-        System.out.println("who are you? : ");
-        System.out.println();
-        System.out.println("2- TEACHER");
-        System.out.println("3- ADMIN");
 
-        setCursorPosition(3, 16);
-
-        int answer = scan.nextInt();
-        switch (answer){
-//            case 1: State = 1;break;
-            case 2: State = 2; break;
-            case 3: State = 3; break;
-        }
-    }
     private static void setCursorPosition(int row, int col) {
         // ANSI escape code to set cursor position
         String escapeCode = STR."\u001B[\{row + 1};\{col + 1}H";
